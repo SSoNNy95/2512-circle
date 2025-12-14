@@ -101,7 +101,9 @@ function App() {
         )}
       </AnimatePresence>
 
-      {currentPage !== 'home' && <HelpButton stage={currentStage} />}
+      {currentPage !== 'home' && currentStage !== 'derive' && currentStage !== 'apply' && (
+        <HelpButton stage={currentStage} />
+      )}
     </>
   );
 }
