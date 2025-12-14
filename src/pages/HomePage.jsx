@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface HomePageProps {
-  onStart: () => void;
-}
-
-const HomePage: React.FC<HomePageProps> = ({ onStart }) => {
+const HomePage = ({ onStart }) => {
   const [studentId, setStudentId] = useState('');
   const [studentName, setStudentName] = useState('');
   const [rectangleArea, setRectangleArea] = useState('');
   const [parallelogramArea, setParallelogramArea] = useState('');
   const [circumference, setCircumference] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState('idle');
   const [showHint1, setShowHint1] = useState(false);
   const [showHint2, setShowHint2] = useState(false);
   const [showHint3, setShowHint3] = useState(false);
@@ -27,7 +23,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStart }) => {
     circumference: 'entry.288798689',
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!studentId || !studentName || !rectangleArea || !parallelogramArea || !circumference) {

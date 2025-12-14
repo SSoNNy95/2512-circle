@@ -1,13 +1,7 @@
 import React from 'react';
-import { Measurement } from '../types';
 import { RADIUS } from '../utils/circleUtils';
 
-interface MeasurementToolProps {
-  measurements: Measurement;
-  visible: boolean;
-}
-
-const MeasurementTool: React.FC<MeasurementToolProps> = ({ measurements, visible }) => {
+const MeasurementTool = ({ measurements, visible }) => {
   if (!visible || measurements.width === 0) return null;
 
   const circumference = 2 * Math.PI * RADIUS;
@@ -68,10 +62,4 @@ const MeasurementTool: React.FC<MeasurementToolProps> = ({ measurements, visible
 };
 
 export default MeasurementTool;
-
-
-
-
-
-
 

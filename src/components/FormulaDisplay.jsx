@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 
-interface HiddenTextProps {
-  text: string;
-  id: string;
-  revealed: boolean;
-  onReveal: (id: string) => void;
-}
-
-const HiddenText: React.FC<HiddenTextProps> = ({ text, id, revealed, onReveal }) => {
+const HiddenText = ({ text, id, revealed, onReveal }) => {
   const handleClick = () => {
     if (!revealed) {
       onReveal(id);
@@ -29,14 +22,10 @@ const HiddenText: React.FC<HiddenTextProps> = ({ text, id, revealed, onReveal })
   );
 };
 
-interface FormulaDisplayProps {
-  type: 'dimensions' | 'area';
-}
+const FormulaDisplay = ({ type }) => {
+  const [revealedIds, setRevealedIds] = useState(new Set());
 
-const FormulaDisplay: React.FC<FormulaDisplayProps> = ({ type }) => {
-  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
-
-  const handleReveal = (id: string) => {
+  const handleReveal = (id) => {
     setRevealedIds(prev => new Set(prev).add(id));
   };
 
@@ -75,7 +64,7 @@ const FormulaDisplay: React.FC<FormulaDisplayProps> = ({ type }) => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="ml-8">=</span>
-            <HiddenText text="(원주×1/2)" id="area1" revealed={revealedIds.has('area1')} onReveal={handleReveal} />
+            <HiddenText text="원주×1/2" id="area1" revealed={revealedIds.has('area1')} onReveal={handleReveal} />
             <span>×</span>
             <HiddenText text="반지름" id="area2" revealed={revealedIds.has('area2')} onReveal={handleReveal} />
           </div>

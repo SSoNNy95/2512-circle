@@ -1,27 +1,20 @@
 import React, { useRef, useState } from 'react';
 
-interface PhotoUploadProps {
-  onPhotoUpload: (file: File) => void;
-  onDiameterChange: (diameter: number) => void;
-  diameter: number;
-  calculatedArea: number;
-}
-
-const PhotoUpload: React.FC<PhotoUploadProps> = ({
+const PhotoUpload = ({
   onPhotoUpload,
   onDiameterChange,
   diameter,
   calculatedArea,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef(null);
+  const [preview, setPreview] = useState(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
+        setPreview(reader.result);
       };
       reader.readAsDataURL(file);
       onPhotoUpload(file);
@@ -91,10 +84,4 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 };
 
 export default PhotoUpload;
-
-
-
-
-
-
 

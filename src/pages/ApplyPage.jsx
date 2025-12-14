@@ -2,17 +2,8 @@ import React, { useState } from 'react';
 import CircleProblem from '../components/CircleProblem';
 import { motion } from 'framer-motion';
 
-interface ApplyPageProps {
-  onPrev: () => void;
-}
-
-interface ProblemAnswer {
-  answer: string;
-  correct: boolean;
-}
-
-const ApplyPage: React.FC<ApplyPageProps> = ({ onPrev }) => {
-  const [answers, setAnswers] = useState<{ [key: number]: string }>({
+const ApplyPage = ({ onPrev }) => {
+  const [answers, setAnswers] = useState({
     1: '',
     2: '',
     3: '',
@@ -27,14 +18,14 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ onPrev }) => {
     { number: 3, radius: 10, pi: 3.14, correctAnswer: 3.14 * 10 * 10 }, // π × r² = 3.14 × 100 = 314
   ];
 
-  const handleAnswerChange = (problemNumber: number, answer: string) => {
+  const handleAnswerChange = (problemNumber, answer) => {
     setAnswers(prev => ({
       ...prev,
       [problemNumber]: answer,
     }));
   };
 
-  const checkAnswers = (): ProblemAnswer[] => {
+  const checkAnswers = () => {
     return problems.map(problem => {
       const userAnswer = parseFloat(answers[problem.number]);
       const correct = Math.abs(userAnswer - problem.correctAnswer) < 0.1;
@@ -114,7 +105,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ onPrev }) => {
             4단계: 적용 모드
           </h1>
           <p className="text-lg text-white/90 drop-shadow">
-            실제 사물에 원의 넓이 공식을 적용해보세요!
+            공식을 적용해 다양한 원의 넓이를 구해보세요!
           </p>
         </motion.div>
 
@@ -125,7 +116,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ onPrev }) => {
               <h2 className="text-xl font-bold text-gray-800 mb-4">학습 단계</h2>
               <div className="space-y-2">
                 <div className="p-3 bg-green-100 text-green-800 rounded-lg">
-                  <div className="font-semibold">1단계: 탐구 ✓</div>
+                  <div className="font-semibold">1단계: 탐색 ✓</div>
                   <div className="text-sm opacity-90">완료</div>
                 </div>
                 <div className="p-3 bg-green-100 text-green-800 rounded-lg">
@@ -138,7 +129,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ onPrev }) => {
                 </div>
                 <div className="p-3 bg-primary-500 text-white rounded-lg shadow-md">
                   <div className="font-semibold">4단계: 적용</div>
-                  <div className="text-sm opacity-90">공식을 적용해 다양한 원의 넓이를 구해 보세요.</div>
+                  <div className="text-sm opacity-90">공식을 적용해 보세요</div>
                 </div>
               </div>
             </div>
@@ -188,6 +179,7 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ onPrev }) => {
                     pi={problem.pi}
                     problemNumber={problem.number}
                     answer={answers[problem.number]}
+                    correctAnswer={problem.correctAnswer}
                     onAnswerChange={(answer) => handleAnswerChange(problem.number, answer)}
                   />
                 ))}
@@ -226,10 +218,4 @@ const ApplyPage: React.FC<ApplyPageProps> = ({ onPrev }) => {
 };
 
 export default ApplyPage;
-
-
-
-
-
-
 

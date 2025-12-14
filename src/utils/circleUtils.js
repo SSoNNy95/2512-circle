@@ -1,5 +1,3 @@
-import { Sector } from '../types';
-
 const COLORS = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
   '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2',
@@ -15,8 +13,8 @@ export const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  * 부채꼴을 공통 원점(0,0)에 두고 생성합니다.
  * 이후 배치는 translate/rotate로만 조정합니다.
  */
-export function generateSectors(count: number): Sector[] {
-  const sectors: Sector[] = [];
+export function generateSectors(count) {
+  const sectors = [];
   const angleStep = (2 * Math.PI) / count;
   const baseStart = -Math.PI / 2 - angleStep / 2; // 위쪽을 향하도록 기준 각도 설정
   const baseEnd = -Math.PI / 2 + angleStep / 2;
@@ -40,7 +38,7 @@ export function generateSectors(count: number): Sector[] {
 /**
  * 중심이 (0,0)인 단일 부채꼴 path를 생성합니다.
  */
-export function getSectorPath(sector: Sector, radius: number = RADIUS): string {
+export function getSectorPath(sector, radius = RADIUS) {
   const half = sector.angle / 2;
   const start = -Math.PI / 2 - half;
   const end = -Math.PI / 2 + half;
@@ -64,7 +62,7 @@ export function getSectorPath(sector: Sector, radius: number = RADIUS): string {
  * 직사각형 형태(위/아래 교차) 배치를 계산합니다.
  * 크기는 유지한 채 translate/rotate만 수정합니다.
  */
-export function calculateOptimalLayout(sectors: Sector[], preserveColor: boolean = false, fitToScreen: boolean = false): Sector[] {
+export function calculateOptimalLayout(sectors, preserveColor = false, fitToScreen = false) {
   const count = sectors.length;
   if (count === 0) return sectors;
 
@@ -110,7 +108,7 @@ export function calculateOptimalLayout(sectors: Sector[], preserveColor: boolean
   });
 }
 
-export function calculateMeasurements(sectors: Sector[]): { width: number; height: number } {
+export function calculateMeasurements(sectors) {
   if (sectors.length === 0) return { width: 0, height: 0 };
 
   const minX = Math.min(...sectors.map(s => s.x));

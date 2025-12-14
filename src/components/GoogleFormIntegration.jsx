@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
-import { FormData, LearningStage } from '../types';
 
-interface GoogleFormIntegrationProps {
-  formData: FormData;
-  onSubmit: () => void;
-}
-
-const GoogleFormIntegration: React.FC<GoogleFormIntegrationProps> = ({
+const GoogleFormIntegration = ({
   formData,
   onSubmit,
 }) => {
@@ -83,10 +77,4 @@ const GoogleFormIntegration: React.FC<GoogleFormIntegrationProps> = ({
 };
 
 export default GoogleFormIntegration;
-
-
-
-
-
-
 

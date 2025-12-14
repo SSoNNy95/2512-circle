@@ -1,31 +1,12 @@
 import React, { useMemo } from 'react';
-import { Sector } from '../types';
 import { getSectorPath, RADIUS, CENTER_X, CENTER_Y } from '../utils/circleUtils';
 import { useDraggable } from '@dnd-kit/core';
-
-interface CircleVisualizationProps {
-  sectors: Sector[];
-  isAnimating: boolean;
-  showMeasurements?: boolean;
-  measurements?: { width: number; height: number };
-  enableRotation?: boolean;
-  onSectorRotate?: (sectorId: string, rotation: number) => void;
-  layoutMode?: 'circle' | 'rectangle';
-  showCircle?: boolean;
-  showMeasurementLabels?: boolean;
-  showColoredBackground?: boolean;
-}
 
 function DraggableSector({ 
   sector, 
   isAnimating,
   enableRotation = false,
   onSectorRotate
-}: { 
-  sector: Sector; 
-  isAnimating: boolean;
-  enableRotation?: boolean;
-  onSectorRotate?: (sectorId: string, rotation: number) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: sector.id,
@@ -33,12 +14,12 @@ function DraggableSector({
   });
 
   // dnd-kit은 HTMLElement를 기대하지만 우리는 SVG <g>를 쓰므로 캐스팅 후 전달
-  const setSvgNodeRef = (node: SVGGElement | null) => setNodeRef(node as unknown as HTMLElement | null);
+  const setSvgNodeRef = (node) => setNodeRef(node);
 
   const path = getSectorPath(sector);
   const x = transform ? sector.x + transform.x : sector.x;
   const y = transform ? sector.y + transform.y : sector.y;
-  const handleDoubleClick = (e: React.MouseEvent) => {
+  const handleDoubleClick = (e) => {
     if (enableRotation && onSectorRotate) {
       e.stopPropagation();
       // 90도씩 회전
@@ -46,7 +27,7 @@ function DraggableSector({
       onSectorRotate(sector.id, newRotation);
     }
   };
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e) => {
     if (!enableRotation || !onSectorRotate) return;
     if (e.detail > 1) return; // 더블클릭 회전과 중복 방지
     e.stopPropagation();
@@ -74,7 +55,7 @@ function DraggableSector({
       <path
         d={path}
         fill={sector.color}
-        stroke="#333"
+        stroke={sector.strokeColor || "#333"}
         strokeWidth="2"
         filter="url(#shadow)"
         opacity={isDragging ? 0.7 : 0.9}
@@ -97,7 +78,7 @@ function DraggableSector({
   );
 }
 
-const CircleVisualization: React.FC<CircleVisualizationProps> = ({ 
+const CircleVisualization = ({ 
   sectors, 
   isAnimating,
   showMeasurements = false,
@@ -108,13 +89,15 @@ const CircleVisualization: React.FC<CircleVisualizationProps> = ({
   showCircle = false,
   showMeasurementLabels = false,
   showColoredBackground = true,
+  showRectangleOnly = false,
+  showSideBySide = false,
 }) => {
   const minX = sectors.length > 0 ? Math.min(...sectors.map(s => s.x)) : 0;
   const maxX = sectors.length > 0 ? Math.max(...sectors.map(s => s.x)) : 0;
   const minY = sectors.length > 0 ? Math.min(...sectors.map(s => s.y)) : 0;
   const maxY = sectors.length > 0 ? Math.max(...sectors.map(s => s.y)) : 0;
   const rectGuide = useMemo(() => {
-    if (layoutMode !== 'rectangle') return null;
+    if (layoutMode !== 'rectangle' && !showRectangleOnly) return null;
     
     // 조각이 있으면 조각 위치 기반으로, 없으면 원주/2 × 반지름 크기로 계산
     if (sectors.length > 0) {
@@ -135,12 +118,27 @@ const CircleVisualization: React.FC<CircleVisualizationProps> = ({
       // 조각이 없을 때: 가로 = 원주의 절반 (π × RADIUS), 세로 = 반지름 (RADIUS)
       const width = Math.PI * RADIUS;
       const height = RADIUS;
-      const x = CENTER_X - width / 2;
-      const y = CENTER_Y - height / 2;
       
-      return { x, y, width, height, totalWidth: width };
+      // 나란히 배치 모드일 때는 오른쪽에 배치하고 크기를 줄임
+      let x, y, displayWidth, displayHeight;
+      if (showSideBySide) {
+        // 원이 왼쪽에 있으므로 직사각형은 오른쪽에 배치
+        // 원의 중심이 약 200, 직사각형 중심이 약 600
+        // 크기를 0.7배로 줄임
+        displayWidth = width * 0.7;
+        displayHeight = height * 0.7;
+        x = 600 - displayWidth / 2;
+        y = CENTER_Y - displayHeight / 2;
+      } else {
+        displayWidth = width;
+        displayHeight = height;
+        x = CENTER_X - width / 2;
+        y = CENTER_Y - height / 2;
+      }
+      
+      return { x, y, width: displayWidth, height: displayHeight, totalWidth: displayWidth };
     }
-  }, [layoutMode, sectors]);
+  }, [layoutMode, sectors, showRectangleOnly, showSideBySide]);
 
   return (
     <svg
@@ -165,33 +163,55 @@ const CircleVisualization: React.FC<CircleVisualizationProps> = ({
         >
           <polygon points="0 0, 10 3, 0 6" fill="#3b82f6" />
         </marker>
+        <marker
+          id="arrowhead-right"
+          markerWidth="10"
+          markerHeight="10"
+          refX="9"
+          refY="3"
+          orient="auto"
+        >
+          <polygon points="0 0, 10 3, 0 6" fill="#333" />
+        </marker>
       </defs>
       
-      {showCircle && sectors.length === 0 && (
+      {showCircle && (sectors.length === 0 || showRectangleOnly) && (
         <g>
-          {/* 원의 둘레 - 왼쪽 절반 (빨강) */}
-          <path
-            d={`M ${CENTER_X} ${CENTER_Y - RADIUS} A ${RADIUS} ${RADIUS} 0 0 0 ${CENTER_X} ${CENTER_Y + RADIUS}`}
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="4"
-          />
-          {/* 원의 둘레 - 오른쪽 절반 (파랑) */}
-          <path
-            d={`M ${CENTER_X} ${CENTER_Y - RADIUS} A ${RADIUS} ${RADIUS} 0 0 1 ${CENTER_X} ${CENTER_Y + RADIUS}`}
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth="4"
-          />
-          {/* 중심에서 반지름까지의 선 (초록색 굵게) */}
-          <line
-            x1={CENTER_X}
-            y1={CENTER_Y}
-            x2={CENTER_X}
-            y2={CENTER_Y - RADIUS}
-            stroke="#10b981"
-            strokeWidth="4"
-          />
+          {/* 원의 위치: 나란히 배치 모드일 때는 왼쪽에, 아니면 중앙에 */}
+          {(() => {
+            const circleCenterX = showSideBySide ? 200 : CENTER_X;
+            const circleCenterY = CENTER_Y;
+            // 나란히 배치 모드일 때 크기를 0.7배로 줄임
+            const displayRadius = showSideBySide ? RADIUS * 0.7 : RADIUS;
+            
+            return (
+              <>
+                {/* 원의 둘레 - 왼쪽 절반 (빨강) */}
+                <path
+                  d={`M ${circleCenterX} ${circleCenterY - displayRadius} A ${displayRadius} ${displayRadius} 0 0 0 ${circleCenterX} ${circleCenterY + displayRadius}`}
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth="4"
+                />
+                {/* 원의 둘레 - 오른쪽 절반 (파랑) */}
+                <path
+                  d={`M ${circleCenterX} ${circleCenterY - displayRadius} A ${displayRadius} ${displayRadius} 0 0 1 ${circleCenterX} ${circleCenterY + displayRadius}`}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="4"
+                />
+                {/* 중심에서 반지름까지의 선 (초록색 굵게) */}
+                <line
+                  x1={circleCenterX}
+                  y1={circleCenterY}
+                  x2={circleCenterX}
+                  y2={circleCenterY - displayRadius}
+                  stroke="#10b981"
+                  strokeWidth="4"
+                />
+              </>
+            );
+          })()}
         </g>
       )}
       
@@ -357,8 +377,8 @@ const CircleVisualization: React.FC<CircleVisualizationProps> = ({
         </g>
       )}
       
-      {/* 조각이 있을 때만 렌더링 (3단계에서는 직사각형만 표시) */}
-      {sectors.length > 0 && sectors.map((sector) => (
+      {/* 조각이 있을 때만 렌더링 */}
+      {!showRectangleOnly && sectors.length > 0 && sectors.map((sector) => (
         <DraggableSector
           key={sector.id}
           sector={sector}
@@ -367,6 +387,73 @@ const CircleVisualization: React.FC<CircleVisualizationProps> = ({
           onSectorRotate={onSectorRotate}
         />
       ))}
+      
+      {/* 직사각형만 표시하는 경우 */}
+      {showRectangleOnly && rectGuide && (
+        <g>
+          {/* 배경 */}
+          <rect
+            x={rectGuide.x}
+            y={rectGuide.y}
+            width={rectGuide.width}
+            height={rectGuide.height}
+            fill="white"
+            rx={12}
+          />
+          {/* 윗 가로 선분 (빨강) */}
+          <line
+            x1={rectGuide.x}
+            y1={rectGuide.y}
+            x2={rectGuide.x + rectGuide.width}
+            y2={rectGuide.y}
+            stroke="#ef4444"
+            strokeWidth="4"
+          />
+          {/* 아랫 가로 선분 (파랑) */}
+          <line
+            x1={rectGuide.x}
+            y1={rectGuide.y + rectGuide.height}
+            x2={rectGuide.x + rectGuide.width}
+            y2={rectGuide.y + rectGuide.height}
+            stroke="#3b82f6"
+            strokeWidth="4"
+          />
+          {/* 왼쪽 세로 선분 (초록) */}
+          <line
+            x1={rectGuide.x}
+            y1={rectGuide.y}
+            x2={rectGuide.x}
+            y2={rectGuide.y + rectGuide.height}
+            stroke="#10b981"
+            strokeWidth="4"
+          />
+          {/* 오른쪽 세로 선분 (초록) */}
+          <line
+            x1={rectGuide.x + rectGuide.width}
+            y1={rectGuide.y}
+            x2={rectGuide.x + rectGuide.width}
+            y2={rectGuide.y + rectGuide.height}
+            stroke="#10b981"
+            strokeWidth="4"
+          />
+        </g>
+      )}
+      
+      {/* 원과 직사각형 사이 화살표 (나란히 배치 모드일 때) - 원에서 직사각형으로 */}
+      {showSideBySide && showCircle && showRectangleOnly && rectGuide && (
+        <g>
+          {/* 화살표 선 - 원에서 직사각형으로 */}
+          <line
+            x1={200 + RADIUS * 0.7}
+            y1={CENTER_Y}
+            x2={rectGuide.x - 20}
+            y2={CENTER_Y}
+            stroke="#333"
+            strokeWidth="3"
+            markerEnd="url(#arrowhead-right)"
+          />
+        </g>
+      )}
     </svg>
   );
 };

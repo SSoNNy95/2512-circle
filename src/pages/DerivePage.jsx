@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Sector } from '../types';
-import { generateSectors, calculateOptimalLayout } from '../utils/circleUtils';
+import { generateSectors, calculateOptimalLayout, RADIUS, CENTER_X, CENTER_Y } from '../utils/circleUtils';
 import CircleVisualization from '../components/CircleVisualization';
 import FormulaDisplay from '../components/FormulaDisplay';
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 
-interface DerivePageProps {
-  onNext: () => void;
-  onPrev: () => void;
-}
-
-const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
-  const [sectors, setSectors] = useState<Sector[]>([]);
+const DerivePage = ({ onNext, onPrev }) => {
+  const [sectors, setSectors] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [layoutMode, setLayoutMode] = useState<'circle' | 'rectangle'>('circle');
+  const [layoutMode, setLayoutMode] = useState('circle');
   const [showCircle, setShowCircle] = useState(true);
   const [showDimensionsFormula, setShowDimensionsFormula] = useState(false);
   const [showAreaFormula, setShowAreaFormula] = useState(false);
+  const [showRectangleOnly, setShowRectangleOnly] = useState(false);
+  const [showSideBySide, setShowSideBySide] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -35,9 +31,9 @@ const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
     }
   }, [showCircle]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event) => {
     const { active, delta } = event;
-    const sectorId = active.id as string;
+    const sectorId = active.id;
     const sector = sectors.find(s => s.id === sectorId);
 
     if (!sector) return;
@@ -57,6 +53,8 @@ const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
     setLayoutMode('circle');
     setShowCircle(true);
     setSectors([]);
+    setShowRectangleOnly(false);
+    setShowSideBySide(false);
     
     setTimeout(() => {
       setIsAnimating(false);
@@ -66,14 +64,155 @@ const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
   const handleCircleClick = () => {
     if (isAnimating) return;
     setIsAnimating(true);
-    setShowCircle(false);
-    // 조각을 생성하지 않고 직사각형 모드만 활성화
-    setSectors([]);
-    setLayoutMode('rectangle');
+    setShowRectangleOnly(false);
     
+    // 초기 상태: 원을 표시하지 않고 시작
+    setShowCircle(false);
+    
+    // 1단계 (0.8초): 원을 128조각으로 등분
+    setTimeout(() => {
+      const newSectors = generateSectors(128);
+      setSectors(newSectors);
+      setLayoutMode('circle');
+    }, 800);
+    
+    // 2단계 (1.5초): 부채꼴을 위 아래로 배열 (색상 적용)
+    setTimeout(() => {
+      const newSectors = generateSectors(128);
+      // 위아래로 배열하되, 아직 가로 길이 조정 전
+      const arrangedSectors = calculateOptimalLayoutWithColors(newSectors);
+      setSectors(arrangedSectors);
+      setLayoutMode('rectangle');
+    }, 1500);
+    
+    // 3단계 (2.5초): 위아래 부채꼴을 맞물려 모으기
+    setTimeout(() => {
+      // 현재 sectors의 색상을 유지하면서 위치만 조정
+      setSectors(prevSectors => {
+        if (prevSectors.length === 0) {
+          const newSectors = generateSectors(128);
+          const coloredSectors = calculateOptimalLayoutWithColors(newSectors);
+          return calculateOptimalLayoutForRectangle(coloredSectors);
+        }
+        return calculateOptimalLayoutForRectangle(prevSectors);
+      });
+      setLayoutMode('rectangle');
+    }, 2500);
+    
+    // 4단계 (3.5초): 직사각형만 나타내기
+    setTimeout(() => {
+      setShowRectangleOnly(true);
+      setShowCircle(false);
+      setShowSideBySide(false);
+      setSectors([]); // 부채꼴 숨기기
+    }, 3500);
+    
+    // 5단계 (5.5초 = 3.5초 + 2초): 원과 직사각형을 나란히 나타내기
+    setTimeout(() => {
+      setShowSideBySide(true);
+      setShowCircle(true); // 원도 표시
+      setShowRectangleOnly(true); // 직사각형도 표시
+    }, 5500);
+    
+    // 애니메이션 완료
     setTimeout(() => {
       setIsAnimating(false);
-    }, 2000);
+    }, 6000);
+  };
+  
+  // 위아래로 배열하면서 색상 적용하는 함수
+  const calculateOptimalLayoutWithColors = (sectors) => {
+    const count = sectors.length;
+    if (count === 0) return sectors;
+    
+    const arcLength = RADIUS * (2 * Math.PI / count);
+    let spacing = arcLength;
+    
+    const totalWidth = spacing * (count - 1);
+    const startX = CENTER_X - totalWidth / 2;
+    const upperY = CENTER_Y - RADIUS / 2;
+    const lowerY = CENTER_Y + RADIUS / 2;
+    
+    return sectors.map((sector, index) => {
+      const isEven = index % 2 === 0;
+      const x = startX + index * spacing;
+      const y = isEven ? upperY : lowerY;
+      
+      // 색상 설정
+      // 위쪽: 호 빨간색, 내부 흰색
+      // 아래쪽: 호 파란색, 내부 흰색
+      // 반지름은 초록색이지만 부채꼴 자체에는 반지름 선이 없으므로 stroke로 처리
+      const fillColor = 'white';
+      const strokeColor = isEven ? '#ef4444' : '#3b82f6'; // 위쪽 빨강, 아래쪽 파랑
+      
+      return {
+        ...sector,
+        x,
+        y,
+        rotation: isEven ? 0 : Math.PI,
+        color: fillColor,
+        strokeColor: strokeColor, // 호 색상
+      };
+    });
+  };
+  
+  // 가로가 원주의 절반(π × RADIUS), 세로가 반지름(RADIUS)인 직사각형으로 변환하는 함수
+  // 아래쪽 부채꼴이 위쪽 부채꼴 사이로 들어가 빈틈 없이 맞물리도록 배치
+  const calculateOptimalLayoutForRectangle = (sectors) => {
+    const count = sectors.length;
+    if (count === 0) return sectors;
+    
+    // 가로 = 원주의 절반 = π × RADIUS
+    const targetWidth = Math.PI * RADIUS;
+    // 세로 = 반지름 = RADIUS
+    const targetHeight = RADIUS;
+    
+    // 각 부채꼴의 호 길이 (원주를 128로 나눈 값)
+    const arcLength = RADIUS * (2 * Math.PI / count);
+    // 전체 가로를 128개 부채꼴로 나눈 간격
+    const spacing = targetWidth / count;
+    
+    const startX = CENTER_X - targetWidth / 2;
+    // 위쪽 줄: y = CENTER_Y - RADIUS/2
+    // 아래쪽 줄: y = CENTER_Y + RADIUS/2
+    const upperY = CENTER_Y - targetHeight / 2;
+    const lowerY = CENTER_Y + targetHeight / 2;
+    
+    return sectors.map((sector, index) => {
+      const isEven = index % 2 === 0;
+      
+      // 색상 유지 (2단계에서 설정한 색상)
+      const fillColor = sector.color || 'white';
+      const strokeColor = sector.strokeColor || (isEven ? '#ef4444' : '#3b82f6');
+      
+      if (isEven) {
+        // 위쪽 부채꼴: 짝수 인덱스
+        // 위쪽 줄에 배치, 각 부채꼴의 호가 직선으로 펼쳐짐
+        const upperIndex = index / 2;
+        const x = startX + upperIndex * spacing * 2; // 위쪽 부채꼴은 2칸씩 간격
+        return {
+          ...sector,
+          x,
+          y: upperY,
+          rotation: 0, // 정상 방향 (위쪽으로 향함)
+          color: fillColor,
+          strokeColor: strokeColor,
+        };
+      } else {
+        // 아래쪽 부채꼴: 홀수 인덱스
+        // 위쪽 부채꼴 사이의 중간 위치에 배치하여 맞물리게 함
+        const lowerIndex = (index - 1) / 2;
+        const x = startX + (lowerIndex * 2 + 1) * spacing; // 위쪽 부채꼴 사이의 중간
+        return {
+          ...sector,
+          x,
+          y: lowerY,
+          rotation: Math.PI, // 180도 회전하여 아래쪽으로 향하게
+          color: fillColor,
+          strokeColor: strokeColor,
+        };
+      }
+    });
   };
 
   return (
@@ -99,7 +238,7 @@ const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
               <h2 className="text-xl font-bold text-gray-800 mb-4">학습 단계</h2>
               <div className="space-y-2">
                 <div className="p-3 bg-green-100 text-green-800 rounded-lg">
-                  <div className="font-semibold">1단계: 탐구 ✓</div>
+                  <div className="font-semibold">1단계: 탐색 ✓</div>
                   <div className="text-sm opacity-90">완료</div>
                 </div>
                 <div className="p-3 bg-green-100 text-green-800 rounded-lg">
@@ -112,7 +251,7 @@ const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
                 </div>
                 <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
                   <div className="font-semibold">4단계: 적용</div>
-                  <div className="text-sm">실제 사물에 공식을 적용해보세요</div>
+                  <div className="text-sm">공식을 적용해 보세요</div>
                 </div>
               </div>
             </div>
@@ -130,7 +269,7 @@ const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
               </button>
             )}
 
-            {!showCircle && (
+            {(!showCircle || showSideBySide) && (
               <>
                 <button
                   onClick={() => setShowDimensionsFormula(!showDimensionsFormula)}
@@ -190,6 +329,8 @@ const DerivePage: React.FC<DerivePageProps> = ({ onNext, onPrev }) => {
                     enableRotation={false}
                     layoutMode={layoutMode}
                     showCircle={showCircle}
+                    showRectangleOnly={showRectangleOnly}
+                    showSideBySide={showSideBySide}
                   />
                 </DndContext>
               </div>

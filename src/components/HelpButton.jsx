@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { LearningStage } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface HelpButtonProps {
-  stage: LearningStage;
-}
-
-const HELP_CONTENT: Record<LearningStage, { title: string; content: string[] }> = {
+const HELP_CONTENT = {
   explore: {
-    title: '1단계: 탐구 모드 도움말',
+    title: '1단계: 탐색 모드 도움말',
     content: [
       '슬라이더를 움직여 원을 여러 개로 나눠보세요.',
       '나눈 조각들을 마우스로 드래그하여 자유롭게 이동시킬 수 있습니다.',
@@ -45,7 +40,7 @@ const HELP_CONTENT: Record<LearningStage, { title: string; content: string[] }> 
   },
 };
 
-const HelpButton: React.FC<HelpButtonProps> = ({ stage }) => {
+const HelpButton = ({ stage }) => {
   const [isOpen, setIsOpen] = useState(false);
   const help = HELP_CONTENT[stage];
 
@@ -108,10 +103,4 @@ const HelpButton: React.FC<HelpButtonProps> = ({ stage }) => {
 };
 
 export default HelpButton;
-
-
-
-
-
-
 

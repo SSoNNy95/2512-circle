@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Sector } from '../types';
 import { generateSectors } from '../utils/circleUtils';
 import SectorSlider from '../components/SectorSlider';
 import CircleVisualization from '../components/CircleVisualization';
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 
-interface ExplorePageProps {
-  onNext: () => void;
-}
-
-const ExplorePage: React.FC<ExplorePageProps> = ({ onNext }) => {
+const ExplorePage = ({ onNext }) => {
   const [sectorCount, setSectorCount] = useState(8);
-  const [sectors, setSectors] = useState<Sector[]>([]);
+  const [sectors, setSectors] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
 
   const sensors = useSensors(
@@ -28,9 +23,9 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNext }) => {
     setSectors(newSectors);
   }, [sectorCount]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event) => {
     const { active, delta } = event;
-    const sectorId = active.id as string;
+    const sectorId = active.id;
     const sector = sectors.find(s => s.id === sectorId);
 
     if (!sector) return;
@@ -55,7 +50,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNext }) => {
     }, 2000);
   };
 
-  const handleSectorRotate = (sectorId: string, rotation: number) => {
+  const handleSectorRotate = (sectorId, rotation) => {
     const updatedSectors = sectors.map(s =>
       s.id === sectorId ? { ...s, rotation } : s
     );
@@ -71,7 +66,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNext }) => {
           className="text-center mb-8"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-            1단계: 탐구 모드
+            1단계: 탐색 모드
           </h1>
           <p className="text-lg text-white/90 drop-shadow">
             원을 나누고 조각들을 자유롭게 배치해보세요!
@@ -85,7 +80,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNext }) => {
               <h2 className="text-xl font-bold text-gray-800 mb-4">학습 단계</h2>
               <div className="space-y-2">
                 <div className="p-3 bg-primary-500 text-white rounded-lg shadow-md">
-                  <div className="font-semibold">1단계: 탐구</div>
+                  <div className="font-semibold">1단계: 탐색</div>
                   <div className="text-sm opacity-90">원을 나누고 자유롭게 배치해보세요</div>
                 </div>
                 <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
@@ -98,7 +93,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNext }) => {
                 </div>
                 <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
                   <div className="font-semibold">4단계: 적용</div>
-                  <div className="text-sm">실제 사물에 공식을 적용해보세요</div>
+                  <div className="text-sm">공식을 적용해 보세요</div>
                 </div>
               </div>
             </div>
@@ -159,6 +154,4 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onNext }) => {
 };
 
 export default ExplorePage;
-
-
 

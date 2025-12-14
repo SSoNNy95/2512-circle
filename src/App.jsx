@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LearningStage } from './types';
 import HomePage from './pages/HomePage';
 import ExplorePage from './pages/ExplorePage';
 import DiscoverPage from './pages/DiscoverPage';
@@ -8,11 +7,9 @@ import ApplyPage from './pages/ApplyPage';
 import HelpButton from './components/HelpButton';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type Page = 'home' | LearningStage;
-
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-  const [currentStage, setCurrentStage] = useState<LearningStage>('explore');
+  const [currentPage, setCurrentPage] = useState('home');
+  const [currentStage, setCurrentStage] = useState('explore');
 
   const handleStart = () => {
     setCurrentPage('explore');
@@ -20,7 +17,7 @@ function App() {
   };
 
   const handleNext = () => {
-    const stages: LearningStage[] = ['explore', 'discover', 'derive', 'apply'];
+    const stages = ['explore', 'discover', 'derive', 'apply'];
     const currentIndex = stages.indexOf(currentStage);
     if (currentIndex < stages.length - 1) {
       const nextStage = stages[currentIndex + 1];
@@ -30,7 +27,7 @@ function App() {
   };
 
   const handlePrev = () => {
-    const stages: LearningStage[] = ['explore', 'discover', 'derive', 'apply'];
+    const stages = ['explore', 'discover', 'derive', 'apply'];
     const currentIndex = stages.indexOf(currentStage);
     if (currentIndex > 0) {
       const prevStage = stages[currentIndex - 1];
@@ -39,7 +36,7 @@ function App() {
     }
   };
 
-  const handleStageChange = (stage: LearningStage) => {
+  const handleStageChange = (stage) => {
     setCurrentStage(stage);
     setCurrentPage(stage);
   };

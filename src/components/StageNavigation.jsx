@@ -1,20 +1,13 @@
 import React from 'react';
-import { LearningStage } from '../types';
 
-interface StageNavigationProps {
-  currentStage: LearningStage;
-  onStageChange: (stage: LearningStage) => void;
-  onReset: () => void;
-}
-
-const STAGES: { key: LearningStage; label: string; description: string }[] = [
-  { key: 'explore', label: '1단계: 탐구', description: '원을 나누고 자유롭게 배치해보세요' },
+const STAGES = [
+  { key: 'explore', label: '1단계: 탐색', description: '원을 나누고 자유롭게 배치해보세요' },
   { key: 'discover', label: '2단계: 발견', description: '최적 배열을 통해 패턴을 발견해보세요' },
   { key: 'derive', label: '3단계: 공식 도출', description: '측정을 통해 공식을 도출해보세요' },
-  { key: 'apply', label: '4단계: 적용', description: '실제 사물에 공식을 적용해보세요' },
+  { key: 'apply', label: '4단계: 적용', description: '공식을 적용해 보세요' },
 ];
 
-const StageNavigation: React.FC<StageNavigationProps> = ({
+const StageNavigation = ({
   currentStage,
   onStageChange,
   onReset,
@@ -93,10 +86,4 @@ const StageNavigation: React.FC<StageNavigationProps> = ({
 };
 
 export default StageNavigation;
-
-
-
-
-
-
 

@@ -1,14 +1,8 @@
 import React from 'react';
 
-interface SectorSliderProps {
-  sectorCount: number;
-  onSectorCountChange: (count: number) => void;
-  disabled?: boolean;
-}
-
 const SECTOR_OPTIONS = [4, 8, 16, 32, 64, 128];
 
-const SectorSlider: React.FC<SectorSliderProps> = ({
+const SectorSlider = ({
   sectorCount,
   onSectorCountChange,
   disabled = false,
@@ -61,10 +55,4 @@ const SectorSlider: React.FC<SectorSliderProps> = ({
 };
 
 export default SectorSlider;
-
-
-
-
-
-
 

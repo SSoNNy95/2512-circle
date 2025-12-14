@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Sector } from '../types';
 import { generateSectors, calculateOptimalLayout } from '../utils/circleUtils';
 import SectorSlider from '../components/SectorSlider';
 import CircleVisualization from '../components/CircleVisualization';
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 
-interface DiscoverPageProps {
-  onNext: () => void;
-  onPrev: () => void;
-}
-
-const DiscoverPage: React.FC<DiscoverPageProps> = ({ onNext, onPrev }) => {
+const DiscoverPage = ({ onNext, onPrev }) => {
   const [sectorCount, setSectorCount] = useState(8);
-  const [sectors, setSectors] = useState<Sector[]>([]);
+  const [sectors, setSectors] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [layoutMode, setLayoutMode] = useState<'circle' | 'rectangle'>('circle');
+  const [layoutMode, setLayoutMode] = useState('circle');
+  const [questionAnswer, setQuestionAnswer] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -31,9 +27,9 @@ const DiscoverPage: React.FC<DiscoverPageProps> = ({ onNext, onPrev }) => {
     setLayoutMode('circle');
   }, [sectorCount]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event) => {
     const { active, delta } = event;
-    const sectorId = active.id as string;
+    const sectorId = active.id;
     const sector = sectors.find(s => s.id === sectorId);
 
     if (!sector) return;
@@ -70,7 +66,7 @@ const DiscoverPage: React.FC<DiscoverPageProps> = ({ onNext, onPrev }) => {
     }, 2000);
   };
 
-  const handleSectorRotate = (sectorId: string, rotation: number) => {
+  const handleSectorRotate = (sectorId, rotation) => {
     const updatedSectors = sectors.map(s =>
       s.id === sectorId ? { ...s, rotation } : s
     );
@@ -100,7 +96,7 @@ const DiscoverPage: React.FC<DiscoverPageProps> = ({ onNext, onPrev }) => {
               <h2 className="text-xl font-bold text-gray-800 mb-4">학습 단계</h2>
               <div className="space-y-2">
                 <div className="p-3 bg-green-100 text-green-800 rounded-lg">
-                  <div className="font-semibold">1단계: 탐구 ✓</div>
+                  <div className="font-semibold">1단계: 탐색 ✓</div>
                   <div className="text-sm opacity-90">완료</div>
                 </div>
                 <div className="p-3 bg-primary-500 text-white rounded-lg shadow-md">
@@ -113,7 +109,7 @@ const DiscoverPage: React.FC<DiscoverPageProps> = ({ onNext, onPrev }) => {
                 </div>
                 <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
                   <div className="font-semibold">4단계: 적용</div>
-                  <div className="text-sm">실제 사물에 공식을 적용해보세요</div>
+                  <div className="text-sm">공식을 적용해 보세요</div>
                 </div>
               </div>
             </div>
@@ -143,10 +139,43 @@ const DiscoverPage: React.FC<DiscoverPageProps> = ({ onNext, onPrev }) => {
 
             <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
               <h4 className="font-semibold text-yellow-800 mb-2">🤔 탐구 질문</h4>
-              <p className="text-sm text-yellow-700">
-                분할 수를 늘릴수록 어떤 모양에 가까워지나요? 
-                직사각형과 비슷해지나요?
+              <p className="text-sm text-yellow-700 mb-3">
+                분할 수를 늘릴수록 어떤 모양에 가까워지나요?
               </p>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={questionAnswer}
+                  onChange={(e) => {
+                    setQuestionAnswer(e.target.value);
+                    setIsSubmitted(false);
+                  }}
+                  disabled={isSubmitted}
+                  className="w-full px-3 py-2 border-2 border-yellow-400 rounded-lg focus:border-yellow-500 focus:outline-none text-sm disabled:bg-gray-100"
+                  placeholder="답을 입력하세요"
+                />
+                <button
+                  onClick={() => setIsSubmitted(true)}
+                  disabled={questionAnswer.trim() === '' || isSubmitted}
+                  className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  답변 제출
+                </button>
+                {isSubmitted && (
+                  <div className="mt-2">
+                    {questionAnswer.trim().toLowerCase().includes('직사각형') ? (
+                      <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
+                        <span className="text-lg">✓</span>
+                        <span>정답입니다!</span>
+                      </div>
+                    ) : (
+                      <div className="text-red-600 text-sm">
+                        <div className="mb-1">분할 수를 늘릴수록 직사각형에 가까워집니다.</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-2">
