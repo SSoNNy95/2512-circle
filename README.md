@@ -34,7 +34,7 @@
 
 ## 기술 스택
 
-- **React 18** + **TypeScript**
+- **React 18** 
 - **Framer Motion** - 애니메이션
 - **@dnd-kit** - 드래그 앤 드롭
 - **Tailwind CSS** - 스타일링
